@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-5.3.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	
+	<!-- #7.1. 암호화처리 빈 등록 -->
+	<beans:bean id="bcryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+
+	<!-- #7.3 인증/권한 관련 설정 -->
+	<http security="none" pattern="/resources/**" />
+	<!-- intercept-url은 구체적 ~> 일반적인 설정순으로 작성 -->
+	<http auto-config="true">
+		<intercept-url pattern="/" access="permitAll"/>
+		<intercept-url pattern="/index.jsp" access="permitAll"/>
+		
+		<intercept-url pattern="/member/memberEnroll.do" access="isAnonymous()" />
+		<intercept-url pattern="/member/memberLogin.do" access="isAnonymous()" />
+		<intercept-url pattern="/member/checkIdDuplicate.do" access="isAnonymous()" />
+		
+		<intercept-url pattern="/board/boardList.do" access="permitAll"/>
+		<intercept-url pattern="/member/memberLogout.do" access="permitAll" />
+		<intercept-url pattern="/menu/**" access="permitAll" />
+		<intercept-url pattern="/data/**" access="permitAll" />
+		<intercept-url pattern="/ws/**" access="permitAll" />
+		<intercept-url pattern="/echo/**" access="permitAll" />
+		<intercept-url pattern="/stomp/**" access="permitAll" />
+
+		<intercept-url pattern="/admin/**" access="hasRole('ROLE_ADMIN')" />
+		
+		<intercept-url pattern="/**" access="isAuthenticated()" />
+		
+		<!-- 
+			login-page : 로그인폼 요청. 작성필요
+			login-processing-url : security 로그인처리. 작성불필요
+			username-parameter : 기본값(username)
+			password-parameter : 기본값(password)
+			default-target-url : 로그인 성공 후 리다이렉트 url. 기본값(root(/))
+			always-use-default-target : false => 항상 루트로 리다이렉트하지 않음. 이전 요청페이지로 리다이렉트 가능 
+		 -->
+		<form-login
+			login-page="/member/memberLogin.do"
+			login-processing-url="/member/memberLogin.do"
+			default-target-url="/"
+			always-use-default-target="false"
+			username-parameter="memberId"
+			password-parameter="password"
+			authentication-success-forward-url="/member/memberLoginSuccess.do"			
+			/>
+		<logout
+			logout-url="/member/memberLogout.do"
+			logout-success-url="/"
+		/>	
+		<!-- 
+			Cross-site Request Forgery 공격대비 설정
+			- 사용자의 특정 권한을 이용하여 공격자의 의도된 행동을 실행하게 만드는 공격법
+			- 특정 사용자의 권한수정, 등록/수정/삭제
+			- 모든 post 요청에 spring이 제공하는 token 값을 검증
+		-->
+		<csrf disabled="false"/>
+		
+		<!-- 
+			remember me 설정
+			- token-validity-seconds : 유효기간 초단위. 60 * 60 * 24 * 14	
+		-->
+		<remember-me
+			data-source-ref="dataSource"
+			token-validity-seconds="1209600"/>
+		
+		<access-denied-handler
+			error-page="/error/accessDenied.do"	/>
+		
+	</http>
+	
+	<authentication-manager>
+		<authentication-provider user-service-ref="memberSecurityService">
+		<password-encoder ref="bcryptPasswordEncoder"/>
+		</authentication-provider>
+	</authentication-manager>
+	
+	<!-- @Service 클래스를 빈으로 등록 -->
+	<context:component-scan base-package="com.kh.security" />
+
+</beans:beans>

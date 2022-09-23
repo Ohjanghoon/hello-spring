@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kh.spring.demo.model.dao.DemoDao">
+
+	<insert id="insertDev">
+		insert into 
+			dev
+		values (
+			seq_dev_no.nextval,
+			#{name},
+			#{career},
+			#{email},
+			#{gender},
+			#{lang},
+			default)
+	</insert>
+  
+  	<select id="selectDevList" resultMap="devMap">
+  		select 
+  			*
+  		from
+  			dev
+  		order by
+  			no
+  	</select>
+  	
+  	<select id="selectOneDev" resultMap="devMap">
+  		select
+  			*
+  		from
+  			dev
+  		where
+  			no = #{no}
+  	</select>
+  	
+  	<resultMap type="dev" id="devMap">
+  		<result column="lang" property="lang"/>
+  	</resultMap>
+  	
+  	<update id="updateDev">
+  		update 
+  			dev
+  		set
+  			name = #{name},
+  			email = #{email},
+  			career = #{career},
+  			gender = #{gender},
+  			lang = #{lang}
+  		where
+  			no = #{no}	
+  	</update>
+  	
+  	<update id="updatePartialDev">
+  		update 
+  			dev
+  		<set>
+	  		<if test="name != null and name != ''">
+	  			name = #{name},
+	  		</if>
+			<if test="email != null and email != ''">
+			 	email = #{email}, 
+			</if>
+			<if test="career != null and career != 0">
+			 	career = #{career}, 
+			</if>
+			<if test="gender != null and gender != ''">
+			 	gender = #{gender}, 
+			</if>
+			<if test="lang != null">
+			 	lang = #{lang} 
+			</if>
+  		</set>
+  		where
+  			no = #{no}	
+  	</update>
+  	
+  	<delete id="deleteDev">
+  		delete from
+  			dev
+  		where 
+  			no = #{no}
+  	</delete>
+  	
+</mapper>
